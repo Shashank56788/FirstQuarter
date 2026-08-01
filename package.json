@@ -1,0 +1,23 @@
+{
+  "name": "first-quarter-level3-private-allowlist",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Private Allowlist Access dApp on Midnight Blockchain (Level 3 Hackathon Submission)",
+  "workspaces": [
+    "contract",
+    "frontend",
+    "indexer"
+  ],
+  "scripts": {
+    "test": "vitest run --passWithNoTests",
+    "test:watch": "vitest",
+    "build": "npm run build --workspace=contract && npm run build --workspace=indexer && npm run build --workspace=frontend",
+    "dev": "concurrently \"npm run dev --workspace=frontend\" \"npm run dev --workspace=indexer\"",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "typescript": "^5.4.5",
+    "vitest": "^1.6.0"
+  }
+}

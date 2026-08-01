@@ -1,0 +1,26 @@
+# Dependencies
+node_modules
+.pnpm-store
+
+# Build outputs
+dist
+build
+out
+.compact/
+*.compact.js
+*.compact.d.ts
+*.proof
+
+# Logs & Environment
+*.log
+npm-debug.log*
+.env
+.env.local
+.env.production
+.ds_store
+.vscode/
+.idea/
+
+# Coverage & Tests
+coverage/
+.vitest/

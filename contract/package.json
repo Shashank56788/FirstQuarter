@@ -1,0 +1,17 @@
+{
+  "name": "@first-quarter/allowlist-contract",
+  "version": "1.0.0",
+  "private": true,
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "compile:compact": "echo 'Compiling Compact smart contract...' && tsc"
+  },
+  "dependencies": {
+    "@midnight-ntwrk/compact-runtime": "^0.6.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.5"
+  }
+}
