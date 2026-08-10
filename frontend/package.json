@@ -9,9 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@midnight-ntwrk/midnight-js-contracts": "^0.6.0",
-    "@midnight-ntwrk/midnight-js-fetch-zk-config": "^0.6.0",
-    "@midnight-ntwrk/midnight-js-types": "^0.6.0",
+    "@first-quarter/allowlist-contract": "*",
     "clsx": "^2.1.1",
     "framer-motion": "^11.2.10",
     "lucide-react": "^0.383.0",
