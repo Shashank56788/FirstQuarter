@@ -1,6 +1,6 @@
 import React from 'react';
 import { Eye, ShieldCheck, Hash, Radio, RefreshCw, CheckCircle2, RotateCcw } from 'lucide-react';
-import { LedgerState } from '../../../contract/src';
+import { LedgerState } from '../contract-bindings';
 
 interface LedgerObserverProps {
   ledger: LedgerState;

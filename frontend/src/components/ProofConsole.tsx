@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Cpu, ShieldCheck, Key, Lock, ArrowRight, CheckCircle2, XCircle, Loader2, Info } from 'lucide-react';
-import { TransactionResult } from '../../../contract/src';
+import { TransactionResult } from '../contract-bindings';
 
 interface ProofConsoleProps {
   onProveMembership: (secret: string, salt: string) => Promise<TransactionResult>;

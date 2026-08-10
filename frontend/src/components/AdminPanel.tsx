@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { UserPlus, Key, ShieldAlert, CheckCircle2, Hash, Sparkles } from 'lucide-react';
-import { computeCommitment } from '../../../contract/src';
+import { computeCommitment } from '../contract-bindings';
 
 interface AdminPanelProps {
   onAddCommitment: (secret: string, salt: string) => { commitment: string; index: number; newRoot: string };

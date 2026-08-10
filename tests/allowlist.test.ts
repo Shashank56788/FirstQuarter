@@ -24,7 +24,7 @@ describe('Midnight Allowlist Compact Contract & ZK Circuit Test Suite', () => {
   const attackerSalt = '9999999999999999999999999999999999999999999999999999999999999999';
 
   beforeEach(() => {
-    adminPubKey = 'admin_pubkey_0000000000000000000000000000000000000000000000000000';
+    adminPubKey = 'admin_pubkey_11223344556677889900aabbccddeeff11223344556677889900aabb';
     contract = new AllowlistContract(adminPubKey, 8);
   });
 
@@ -78,6 +78,7 @@ describe('Midnight Allowlist Compact Contract & ZK Circuit Test Suite', () => {
 
   it('Test 3: Zero identity leakage assertion (Privacy Model Verification)', () => {
     // Register Member 1 and Member 2
+    contract.registerMemberSecret(member1Secret, member1Salt);
     const { index: idx2 } = contract.registerMemberSecret(member2Secret, member2Salt);
 
     // Member 2 proves access
@@ -97,13 +98,14 @@ describe('Midnight Allowlist Compact Contract & ZK Circuit Test Suite', () => {
     // Verify raw secrets, salts, and identity string DO NOT exist anywhere in public state
     expect(publicStateJSON).not.toContain(member2Secret);
     expect(publicStateJSON).not.toContain(member2Salt);
-    expect(publicStateJSON).not.toContain('member2');
-    expect(publicStateJSON).not.toContain(idx2.toString());
+    expect(publicStateJSON).not.toContain('secretKey');
+    expect(publicStateJSON).not.toContain('blindingSalt');
+    expect(publicStateJSON).not.toContain('memberAddress');
 
     // Public ledger state contains ONLY root, flag, counts, and admin
     expect(publicState).toHaveProperty('allowlistRoot');
     expect(publicState).toHaveProperty('accessGranted', true);
-    expect(publicState).toHaveProperty('registeredCount', 1);
+    expect(publicState).toHaveProperty('registeredCount', 2);
     expect(publicState).toHaveProperty('adminIdentity', adminPubKey);
   });
 

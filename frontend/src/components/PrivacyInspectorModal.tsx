@@ -1,6 +1,6 @@
 import React from 'react';
 import { X, Lock, Eye, ShieldAlert, CheckCircle, HelpCircle } from 'lucide-react';
-import { LedgerState } from '../../../contract/src';
+import { LedgerState } from '../contract-bindings';
 
 interface PrivacyInspectorModalProps {
   isOpen: boolean;

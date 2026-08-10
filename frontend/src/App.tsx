@@ -5,11 +5,11 @@ import { ProofConsole } from './components/ProofConsole';
 import { LedgerObserver } from './components/LedgerObserver';
 import { PrivacyInspectorModal } from './components/PrivacyInspectorModal';
 import { MidnightWalletService, WalletState } from './midnight-sdk';
-import { AllowlistContract, TransactionResult, LedgerState, computeCommitment } from '../../contract/src';
+import { AllowlistContract, TransactionResult, LedgerState, computeCommitment } from './contract-bindings';
 import { ShieldCheck, Lock, Eye, Key, Sparkles, BookOpen } from 'lucide-react';
 
 export const App: React.FC = () => {
-  // Wallet State
+  // Wallet State - Starts strictly disconnected by default
   const [wallet, setWallet] = useState<WalletState>({
     isConnected: false,
     address: null,
@@ -23,19 +23,28 @@ export const App: React.FC = () => {
   const [ledger, setLedger] = useState<LedgerState>(() => contract.getPublicLedgerState());
   const [isPrivacyModalOpen, setIsPrivacyModalOpen] = useState(false);
 
-  // Auto initialize demo credentials
+  const walletService = MidnightWalletService.getInstance();
+
+  // Check Lace availability on startup without auto-connecting
   useEffect(() => {
-    // Pre-register one member so the tree is active out-of-the-box
+    walletService.checkLaceAvailability().then((installed) => {
+      setWallet(prev => ({ ...prev, isLaceInstalled: installed }));
+    });
+
+    // Pre-register one member so the Merkle tree is active out-of-the-box
     const defaultSecret = 'a1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6d7e8f90';
     const defaultSalt = '1111111111111111111111111111111111111111111111111111111111111111';
     contract.registerMemberSecret(defaultSecret, defaultSalt);
     setLedger(contract.getPublicLedgerState());
   }, [contract]);
 
-  const walletService = MidnightWalletService.getInstance();
-
-  const handleConnectWallet = async () => {
+  const handleConnectLace = async () => {
     const res = await walletService.connectLaceWallet();
+    setWallet(res);
+  };
+
+  const handleConnectDemo = async () => {
+    const res = await walletService.connectDemoWallet();
     setWallet(res);
   };
 
@@ -82,7 +91,8 @@ export const App: React.FC = () => {
       {/* Header / Navbar */}
       <Navbar
         wallet={wallet}
-        onConnect={handleConnectWallet}
+        onConnectLace={handleConnectLace}
+        onConnectDemo={handleConnectDemo}
         onDisconnect={handleDisconnectWallet}
         onOpenPrivacyModal={() => setIsPrivacyModalOpen(true)}
       />
