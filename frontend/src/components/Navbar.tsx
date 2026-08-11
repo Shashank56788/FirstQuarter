@@ -22,21 +22,13 @@ export const Navbar: React.FC<NavbarProps> = ({
   const [showWalletModal, setShowWalletModal] = useState(false);
 
   const handleLaceSelect = async () => {
-    if (wallet.isLaceInstalled) {
-      setShowWalletModal(false);
-      await onConnectLace();
-    } else {
-      alert('Lace Wallet extension is not installed in your browser. Select Freighter Wallet or Simulator Mode.');
-    }
+    setShowWalletModal(false);
+    await onConnectLace();
   };
 
   const handleFreighterSelect = async () => {
-    if (wallet.isFreighterInstalled) {
-      setShowWalletModal(false);
-      await onConnectFreighter();
-    } else {
-      alert('Freighter Wallet extension is not installed in your browser. Select Lace Wallet or Simulator Mode.');
-    }
+    setShowWalletModal(false);
+    await onConnectFreighter();
   };
 
   const handleDemoSelect = async () => {
@@ -148,7 +140,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               {/* Option 1: Freighter Wallet */}
               <button
                 onClick={handleFreighterSelect}
-                className="w-full p-3.5 rounded-2xl bg-midnight-800/90 hover:bg-midnight-700/90 border border-cyan-500/30 hover:border-cyan-500/60 text-left transition flex items-center justify-between group"
+                className="w-full p-3.5 rounded-2xl bg-midnight-800/90 hover:bg-midnight-700/90 border border-cyan-500/30 hover:border-cyan-500/60 text-left transition flex items-center justify-between group cursor-pointer"
               >
                 <div className="flex items-center space-x-3">
                   <div className="p-2 bg-cyan-500/10 rounded-xl border border-cyan-500/20 text-cyan-400 group-hover:scale-110 transition">
@@ -159,17 +151,15 @@ export const Navbar: React.FC<NavbarProps> = ({
                     <div className="text-[11px] text-slate-400">Stellar Ecosystem Wallet</div>
                   </div>
                 </div>
-                <span className={`text-[10px] font-mono px-2 py-0.5 rounded font-semibold ${
-                  wallet.isFreighterInstalled ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-slate-800 text-slate-400'
-                }`}>
-                  {wallet.isFreighterInstalled ? 'DETECTED' : 'NOT INSTALLED'}
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded font-semibold bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
+                  CONNECT
                 </span>
               </button>
 
               {/* Option 2: Lace Wallet */}
               <button
                 onClick={handleLaceSelect}
-                className="w-full p-3.5 rounded-2xl bg-midnight-800/90 hover:bg-midnight-700/90 border border-purple-500/30 hover:border-purple-500/60 text-left transition flex items-center justify-between group"
+                className="w-full p-3.5 rounded-2xl bg-midnight-800/90 hover:bg-midnight-700/90 border border-purple-500/30 hover:border-purple-500/60 text-left transition flex items-center justify-between group cursor-pointer"
               >
                 <div className="flex items-center space-x-3">
                   <div className="p-2 bg-purple-500/10 rounded-xl border border-purple-500/20 text-purple-400 group-hover:scale-110 transition">
@@ -180,17 +170,15 @@ export const Navbar: React.FC<NavbarProps> = ({
                     <div className="text-[11px] text-slate-400">Official Midnight / Cardano Wallet</div>
                   </div>
                 </div>
-                <span className={`text-[10px] font-mono px-2 py-0.5 rounded font-semibold ${
-                  wallet.isLaceInstalled ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-slate-800 text-slate-400'
-                }`}>
-                  {wallet.isLaceInstalled ? 'DETECTED' : 'NOT INSTALLED'}
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded font-semibold bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                  CONNECT
                 </span>
               </button>
 
               {/* Option 3: ZK Simulator Mode */}
               <button
                 onClick={handleDemoSelect}
-                className="w-full p-3.5 rounded-2xl bg-midnight-800/90 hover:bg-midnight-700/90 border border-midnight-600 hover:border-indigo-500/60 text-left transition flex items-center justify-between group"
+                className="w-full p-3.5 rounded-2xl bg-midnight-800/90 hover:bg-midnight-700/90 border border-midnight-600 hover:border-indigo-500/60 text-left transition flex items-center justify-between group cursor-pointer"
               >
                 <div className="flex items-center space-x-3">
                   <div className="p-2 bg-indigo-500/10 rounded-xl border border-indigo-500/20 text-indigo-400 group-hover:scale-110 transition">
@@ -202,7 +190,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   </div>
                 </div>
                 <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 font-semibold">
-                  READY
+                  SIMULATE
                 </span>
               </button>
             </div>

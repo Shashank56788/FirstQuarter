@@ -51,12 +51,15 @@ export class MidnightWalletService {
   }
 
   /**
-   * Checks for Stellar Freighter browser extension injection.
+   * Robust check for Stellar Freighter extension injection.
+   * Checks window.freighterApi, window.freighter, and window properties.
    */
   public async checkFreighterAvailability(): Promise<boolean> {
     if (typeof window === 'undefined') return false;
-    const injected = (window as any).freighterApi || (window as any).freighter;
-    return !!injected;
+    const freighter = (window as any).freighterApi || (window as any).freighter || (window as any).StellarFreighter;
+    if (freighter) return true;
+    if ('freighterApi' in window || 'freighter' in window) return true;
+    return false;
   }
 
   /**
@@ -66,20 +69,11 @@ export class MidnightWalletService {
     const isLaceInstalled = await this.checkLaceAvailability();
     const isFreighterInstalled = await this.checkFreighterAvailability();
 
-    if (!isLaceInstalled) {
-      return {
-        isConnected: false,
-        address: null,
-        network: 'Disconnected',
-        balance: '0 NIGHT',
-        isLaceInstalled: false,
-        isFreighterInstalled,
-        error: 'Lace Wallet extension is not installed in your browser.'
-      };
-    }
-
     try {
       const lace = (window as any).midnight?.lace || (window as any).cardano?.lace;
+      if (!lace) {
+        throw new Error('Lace Wallet extension is not installed in your browser.');
+      }
       const api = await lace.enable();
       const accounts = await api.getUsedAddresses();
       
@@ -102,9 +96,9 @@ export class MidnightWalletService {
         address: null,
         network: 'Disconnected',
         balance: '0 NIGHT',
-        isLaceInstalled: true,
+        isLaceInstalled: isLaceInstalled,
         isFreighterInstalled,
-        error: err?.message || 'Lace Wallet connection rejected by user.'
+        error: err?.message || 'Lace Wallet connection failed.'
       };
     }
   }
@@ -114,27 +108,27 @@ export class MidnightWalletService {
    */
   public async connectFreighterWallet(): Promise<WalletState> {
     const isLaceInstalled = await this.checkLaceAvailability();
-    const isFreighterInstalled = await this.checkFreighterAvailability();
-
-    if (!isFreighterInstalled) {
-      return {
-        isConnected: false,
-        address: null,
-        network: 'Disconnected',
-        balance: '0 XLM',
-        isLaceInstalled,
-        isFreighterInstalled: false,
-        error: 'Freighter Wallet extension is not installed in your browser.'
-      };
-    }
-
+    
     try {
-      const freighter = (window as any).freighterApi || (window as any).freighter;
+      const freighter = (window as any).freighterApi || (window as any).freighter || (window as any).StellarFreighter;
       let pubKey = '';
-      if (typeof freighter.getPublicKey === 'function') {
-        pubKey = await freighter.getPublicKey();
-      } else if (typeof freighter.requestAccess === 'function') {
-        pubKey = await freighter.requestAccess();
+
+      if (freighter) {
+        if (typeof freighter.getPublicKey === 'function') {
+          pubKey = await freighter.getPublicKey();
+        } else if (typeof freighter.requestAccess === 'function') {
+          pubKey = await freighter.requestAccess();
+        } else if (typeof freighter.isConnected === 'function') {
+          const connected = await freighter.isConnected();
+          if (connected && typeof freighter.getPublicKey === 'function') {
+            pubKey = await freighter.getPublicKey();
+          }
+        }
+      }
+
+      // If pubKey wasn't obtained from inline object, fallback to prompt or window check
+      if (!pubKey && (window as any).freighterApi) {
+        pubKey = await (window as any).freighterApi.getPublicKey();
       }
 
       this.connected = true;
@@ -167,7 +161,7 @@ export class MidnightWalletService {
    * Connect to ZK Simulator Mode
    */
   public async connectDemoWallet(): Promise<WalletState> {
-    await new Promise(res => setTimeout(res, 400));
+    await new Promise(res => setTimeout(res, 300));
     this.connected = true;
     this.address = '0xmn_demo_simulated_user_77777777777777777777777';
     this.currentWalletType = 'Simulator';
