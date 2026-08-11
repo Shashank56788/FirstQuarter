@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { ShieldCheck, Wallet, Lock, Key, ExternalLink, Activity, AlertTriangle, X, Play } from 'lucide-react';
+import { ShieldCheck, Wallet, Lock, Key, ExternalLink, Activity, AlertTriangle, X, Play, Zap } from 'lucide-react';
 import { WalletState } from '../midnight-sdk';
 
 interface NavbarProps {
   wallet: WalletState;
   onConnectLace: () => Promise<void>;
+  onConnectFreighter: () => Promise<void>;
   onConnectDemo: () => Promise<void>;
   onDisconnect: () => void;
   onOpenPrivacyModal: () => void;
@@ -13,27 +14,32 @@ interface NavbarProps {
 export const Navbar: React.FC<NavbarProps> = ({
   wallet,
   onConnectLace,
+  onConnectFreighter,
   onConnectDemo,
   onDisconnect,
   onOpenPrivacyModal
 }) => {
   const [showWalletModal, setShowWalletModal] = useState(false);
-  const [isConnecting, setIsConnecting] = useState(false);
 
-  const handleConnectClick = async () => {
-    setIsConnecting(true);
-    try {
-      if (wallet.isLaceInstalled) {
-        await onConnectLace();
-      } else {
-        setShowWalletModal(true);
-      }
-    } finally {
-      setIsConnecting(false);
+  const handleLaceSelect = async () => {
+    if (wallet.isLaceInstalled) {
+      setShowWalletModal(false);
+      await onConnectLace();
+    } else {
+      alert('Lace Wallet extension is not installed in your browser. Select Freighter Wallet or Simulator Mode.');
     }
   };
 
-  const handleDemoConnect = async () => {
+  const handleFreighterSelect = async () => {
+    if (wallet.isFreighterInstalled) {
+      setShowWalletModal(false);
+      await onConnectFreighter();
+    } else {
+      alert('Freighter Wallet extension is not installed in your browser. Select Lace Wallet or Simulator Mode.');
+    }
+  };
+
+  const handleDemoSelect = async () => {
     setShowWalletModal(false);
     await onConnectDemo();
   };
@@ -90,9 +96,9 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <div className="px-3.5 py-1.5 rounded-xl bg-midnight-800 border border-emerald-500/30 text-xs font-mono text-slate-200 flex items-center space-x-2 shadow-md">
                   <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
                   <span>{wallet.address?.substring(0, 8)}...{wallet.address?.substring(wallet.address.length - 6)}</span>
-                  {wallet.isDemoMode && (
+                  {wallet.walletType && (
                     <span className="px-1.5 py-0.5 text-[9px] bg-purple-500/20 text-purple-300 rounded font-sans font-semibold">
-                      SIMULATOR
+                      {wallet.walletType.toUpperCase()}
                     </span>
                   )}
                 </div>
@@ -106,26 +112,25 @@ export const Navbar: React.FC<NavbarProps> = ({
               </div>
             ) : (
               <button
-                onClick={handleConnectClick}
-                disabled={isConnecting}
+                onClick={() => setShowWalletModal(true)}
                 className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-600 hover:from-purple-500 hover:to-cyan-500 text-white text-xs font-semibold shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/40 transition transform active:scale-95 flex items-center space-x-2"
               >
                 <Wallet className="w-4 h-4" />
-                <span>Connect Lace Wallet</span>
+                <span>Connect Wallet</span>
               </button>
             )}
           </div>
         </div>
       </header>
 
-      {/* Lace Wallet Not Detected Modal */}
+      {/* Multi-Wallet Selection Modal */}
       {showWalletModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-midnight-950/80 backdrop-blur-md animate-fadeIn">
           <div className="bg-midnight-900 border border-midnight-700 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-5 relative">
             <div className="flex items-center justify-between border-b border-midnight-700/60 pb-3">
-              <div className="flex items-center space-x-2.5 text-amber-400 font-bold text-sm">
-                <AlertTriangle className="w-5 h-5" />
-                <span>Lace Wallet Not Detected</span>
+              <div className="flex items-center space-x-2.5 text-slate-100 font-bold text-sm">
+                <Wallet className="w-5 h-5 text-purple-400" />
+                <span>Select Wallet Provider</span>
               </div>
               <button
                 onClick={() => setShowWalletModal(false)}
@@ -136,26 +141,69 @@ export const Navbar: React.FC<NavbarProps> = ({
             </div>
 
             <p className="text-xs text-slate-300 leading-relaxed font-sans">
-              The <strong>Midnight Lace Wallet</strong> extension was not found in your browser. You can install it to connect a live wallet, or proceed in <strong>Demo ZK Simulator Mode</strong> to generate and test proofs.
+              Choose your wallet extension to connect to the dApp and generate Zero-Knowledge proofs:
             </p>
 
-            <div className="space-y-3 pt-2">
-              <a
-                href="https://midnight.network"
-                target="_blank"
-                rel="noreferrer"
-                className="w-full py-2.5 px-4 rounded-xl bg-midnight-800 hover:bg-midnight-700 border border-midnight-600 text-slate-200 text-xs font-semibold flex items-center justify-between transition"
-              >
-                <span>Install Midnight Lace Extension</span>
-                <ExternalLink className="w-4 h-4 text-purple-400" />
-              </a>
-
+            <div className="space-y-3 pt-1">
+              {/* Option 1: Freighter Wallet */}
               <button
-                onClick={handleDemoConnect}
-                className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-bold shadow-lg shadow-purple-600/20 flex items-center justify-center space-x-2 transition"
+                onClick={handleFreighterSelect}
+                className="w-full p-3.5 rounded-2xl bg-midnight-800/90 hover:bg-midnight-700/90 border border-cyan-500/30 hover:border-cyan-500/60 text-left transition flex items-center justify-between group"
               >
-                <Play className="w-4 h-4" />
-                <span>Continue in ZK Simulator Mode</span>
+                <div className="flex items-center space-x-3">
+                  <div className="p-2 bg-cyan-500/10 rounded-xl border border-cyan-500/20 text-cyan-400 group-hover:scale-110 transition">
+                    <Zap className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <div className="text-xs font-bold text-slate-100">Freighter Wallet</div>
+                    <div className="text-[11px] text-slate-400">Stellar Ecosystem Wallet</div>
+                  </div>
+                </div>
+                <span className={`text-[10px] font-mono px-2 py-0.5 rounded font-semibold ${
+                  wallet.isFreighterInstalled ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-slate-800 text-slate-400'
+                }`}>
+                  {wallet.isFreighterInstalled ? 'DETECTED' : 'NOT INSTALLED'}
+                </span>
+              </button>
+
+              {/* Option 2: Lace Wallet */}
+              <button
+                onClick={handleLaceSelect}
+                className="w-full p-3.5 rounded-2xl bg-midnight-800/90 hover:bg-midnight-700/90 border border-purple-500/30 hover:border-purple-500/60 text-left transition flex items-center justify-between group"
+              >
+                <div className="flex items-center space-x-3">
+                  <div className="p-2 bg-purple-500/10 rounded-xl border border-purple-500/20 text-purple-400 group-hover:scale-110 transition">
+                    <ShieldCheck className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <div className="text-xs font-bold text-slate-100">Midnight Lace Wallet</div>
+                    <div className="text-[11px] text-slate-400">Official Midnight / Cardano Wallet</div>
+                  </div>
+                </div>
+                <span className={`text-[10px] font-mono px-2 py-0.5 rounded font-semibold ${
+                  wallet.isLaceInstalled ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-slate-800 text-slate-400'
+                }`}>
+                  {wallet.isLaceInstalled ? 'DETECTED' : 'NOT INSTALLED'}
+                </span>
+              </button>
+
+              {/* Option 3: ZK Simulator Mode */}
+              <button
+                onClick={handleDemoSelect}
+                className="w-full p-3.5 rounded-2xl bg-midnight-800/90 hover:bg-midnight-700/90 border border-midnight-600 hover:border-indigo-500/60 text-left transition flex items-center justify-between group"
+              >
+                <div className="flex items-center space-x-3">
+                  <div className="p-2 bg-indigo-500/10 rounded-xl border border-indigo-500/20 text-indigo-400 group-hover:scale-110 transition">
+                    <Play className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <div className="text-xs font-bold text-slate-100">ZK Simulator Mode</div>
+                    <div className="text-[11px] text-slate-400">Test dApp ZK Proofs without extension</div>
+                  </div>
+                </div>
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 font-semibold">
+                  READY
+                </span>
               </button>
             </div>
           </div>

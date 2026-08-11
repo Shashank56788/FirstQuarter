@@ -15,7 +15,8 @@ export const App: React.FC = () => {
     address: null,
     network: 'Disconnected',
     balance: '0 NIGHT',
-    isLaceInstalled: false
+    isLaceInstalled: false,
+    isFreighterInstalled: false
   });
 
   // Contract instance
@@ -25,10 +26,17 @@ export const App: React.FC = () => {
 
   const walletService = MidnightWalletService.getInstance();
 
-  // Check Lace availability on startup without auto-connecting
+  // Check wallet availability on startup
   useEffect(() => {
-    walletService.checkLaceAvailability().then((installed) => {
-      setWallet(prev => ({ ...prev, isLaceInstalled: installed }));
+    Promise.all([
+      walletService.checkLaceAvailability(),
+      walletService.checkFreighterAvailability()
+    ]).then(([laceInstalled, freighterInstalled]) => {
+      setWallet(prev => ({
+        ...prev,
+        isLaceInstalled: laceInstalled,
+        isFreighterInstalled: freighterInstalled
+      }));
     });
 
     // Pre-register one member so the Merkle tree is active out-of-the-box
@@ -40,6 +48,11 @@ export const App: React.FC = () => {
 
   const handleConnectLace = async () => {
     const res = await walletService.connectLaceWallet();
+    setWallet(res);
+  };
+
+  const handleConnectFreighter = async () => {
+    const res = await walletService.connectFreighterWallet();
     setWallet(res);
   };
 
@@ -92,6 +105,7 @@ export const App: React.FC = () => {
       <Navbar
         wallet={wallet}
         onConnectLace={handleConnectLace}
+        onConnectFreighter={handleConnectFreighter}
         onConnectDemo={handleConnectDemo}
         onDisconnect={handleDisconnectWallet}
         onOpenPrivacyModal={() => setIsPrivacyModalOpen(true)}
@@ -166,7 +180,7 @@ export const App: React.FC = () => {
             <span className="font-semibold text-slate-300">Midnight "First Quarter" Level 3 Submission</span>
           </div>
           <div className="font-mono text-slate-500 text-[11px]">
-            Powered by Midnight Compact Language & Lace Wallet Integration
+            Powered by Midnight Compact Language & Lace/Freighter Multi-Wallet Integration
           </div>
         </div>
       </footer>

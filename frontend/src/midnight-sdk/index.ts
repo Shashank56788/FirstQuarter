@@ -1,16 +1,16 @@
 /**
- * Midnight Blockchain SDK & Lace Wallet Integration Module
- * Real interface wrappers for Midnight JS SDK (@midnight-ntwrk/midnight-js-*)
- * and Lace Wallet API integration.
+ * Midnight Blockchain SDK & Multi-Wallet Integration Module
+ * Supports both Midnight Lace Wallet and Stellar Freighter Wallet extensions.
  */
 
 export interface WalletState {
   isConnected: boolean;
   address: string | null;
-  network: 'Midnight Testnet' | 'Midnight Mainnet' | 'Disconnected' | 'Demo Simulator Mode';
+  network: 'Midnight Testnet' | 'Stellar Mainnet/Testnet' | 'Disconnected' | 'Demo Simulator Mode';
   balance: string;
   isLaceInstalled: boolean;
-  isDemoMode?: boolean;
+  isFreighterInstalled: boolean;
+  walletType?: 'Lace' | 'Freighter' | 'Simulator';
   error?: string;
 }
 
@@ -32,7 +32,7 @@ export class MidnightWalletService {
   private static instance: MidnightWalletService;
   private connected: boolean = false;
   private address: string | null = null;
-  private isDemo: boolean = false;
+  private currentWalletType: 'Lace' | 'Freighter' | 'Simulator' | undefined;
 
   public static getInstance(): MidnightWalletService {
     if (!MidnightWalletService.instance) {
@@ -42,8 +42,7 @@ export class MidnightWalletService {
   }
 
   /**
-   * Strictly checks for Midnight Lace browser extension injection.
-   * Returns true ONLY if Lace wallet is detected in the browser context.
+   * Checks for Midnight Lace browser extension injection.
    */
   public async checkLaceAvailability(): Promise<boolean> {
     if (typeof window === 'undefined') return false;
@@ -52,42 +51,50 @@ export class MidnightWalletService {
   }
 
   /**
-   * Attempts to connect to Midnight Lace Wallet.
-   * Throws an error / sets error state if Lace is not installed.
+   * Checks for Stellar Freighter browser extension injection.
+   */
+  public async checkFreighterAvailability(): Promise<boolean> {
+    if (typeof window === 'undefined') return false;
+    const injected = (window as any).freighterApi || (window as any).freighter;
+    return !!injected;
+  }
+
+  /**
+   * Connect to Midnight Lace Wallet
    */
   public async connectLaceWallet(): Promise<WalletState> {
-    const isInstalled = await this.checkLaceAvailability();
+    const isLaceInstalled = await this.checkLaceAvailability();
+    const isFreighterInstalled = await this.checkFreighterAvailability();
 
-    if (!isInstalled) {
-      this.connected = false;
-      this.address = null;
-      this.isDemo = false;
+    if (!isLaceInstalled) {
       return {
         isConnected: false,
         address: null,
         network: 'Disconnected',
         balance: '0 NIGHT',
         isLaceInstalled: false,
+        isFreighterInstalled,
         error: 'Lace Wallet extension is not installed in your browser.'
       };
     }
 
     try {
-      // Connect to installed Lace extension injection
       const lace = (window as any).midnight?.lace || (window as any).cardano?.lace;
       const api = await lace.enable();
       const accounts = await api.getUsedAddresses();
       
       this.connected = true;
       this.address = accounts[0] || '0xmn1a98c7e6d5c4b3a2f1e0d9c8b7a6f5e4d3c2b1a0';
-      this.isDemo = false;
+      this.currentWalletType = 'Lace';
 
       return {
         isConnected: true,
         address: this.address,
         network: 'Midnight Testnet',
         balance: '1,250.00 NIGHT',
-        isLaceInstalled: true
+        isLaceInstalled: true,
+        isFreighterInstalled,
+        walletType: 'Lace'
       };
     } catch (err: any) {
       return {
@@ -96,19 +103,74 @@ export class MidnightWalletService {
         network: 'Disconnected',
         balance: '0 NIGHT',
         isLaceInstalled: true,
+        isFreighterInstalled,
         error: err?.message || 'Lace Wallet connection rejected by user.'
       };
     }
   }
 
   /**
-   * Explicit Demo/Simulator Mode Connection (For testing without Lace extension)
+   * Connect to Stellar Freighter Wallet
+   */
+  public async connectFreighterWallet(): Promise<WalletState> {
+    const isLaceInstalled = await this.checkLaceAvailability();
+    const isFreighterInstalled = await this.checkFreighterAvailability();
+
+    if (!isFreighterInstalled) {
+      return {
+        isConnected: false,
+        address: null,
+        network: 'Disconnected',
+        balance: '0 XLM',
+        isLaceInstalled,
+        isFreighterInstalled: false,
+        error: 'Freighter Wallet extension is not installed in your browser.'
+      };
+    }
+
+    try {
+      const freighter = (window as any).freighterApi || (window as any).freighter;
+      let pubKey = '';
+      if (typeof freighter.getPublicKey === 'function') {
+        pubKey = await freighter.getPublicKey();
+      } else if (typeof freighter.requestAccess === 'function') {
+        pubKey = await freighter.requestAccess();
+      }
+
+      this.connected = true;
+      this.address = pubKey || 'GDFX...FREIGHTER_CONNECTED_KEY';
+      this.currentWalletType = 'Freighter';
+
+      return {
+        isConnected: true,
+        address: this.address,
+        network: 'Stellar Mainnet/Testnet',
+        balance: '500.00 XLM',
+        isLaceInstalled,
+        isFreighterInstalled: true,
+        walletType: 'Freighter'
+      };
+    } catch (err: any) {
+      return {
+        isConnected: false,
+        address: null,
+        network: 'Disconnected',
+        balance: '0 XLM',
+        isLaceInstalled,
+        isFreighterInstalled: true,
+        error: err?.message || 'Freighter Wallet connection rejected by user.'
+      };
+    }
+  }
+
+  /**
+   * Connect to ZK Simulator Mode
    */
   public async connectDemoWallet(): Promise<WalletState> {
     await new Promise(res => setTimeout(res, 400));
     this.connected = true;
     this.address = '0xmn_demo_simulated_user_77777777777777777777777';
-    this.isDemo = true;
+    this.currentWalletType = 'Simulator';
 
     return {
       isConnected: true,
@@ -116,20 +178,22 @@ export class MidnightWalletService {
       network: 'Demo Simulator Mode',
       balance: '500.00 SIM-NIGHT',
       isLaceInstalled: await this.checkLaceAvailability(),
-      isDemoMode: true
+      isFreighterInstalled: await this.checkFreighterAvailability(),
+      walletType: 'Simulator'
     };
   }
 
   public async disconnectWallet(): Promise<WalletState> {
     this.connected = false;
     this.address = null;
-    this.isDemo = false;
+    this.currentWalletType = undefined;
     return {
       isConnected: false,
       address: null,
       network: 'Disconnected',
       balance: '0 NIGHT',
-      isLaceInstalled: await this.checkLaceAvailability()
+      isLaceInstalled: await this.checkLaceAvailability(),
+      isFreighterInstalled: await this.checkFreighterAvailability()
     };
   }
 }
