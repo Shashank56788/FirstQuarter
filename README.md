@@ -3,97 +3,103 @@
 ![Midnight Compact](https://img.shields.io/badge/Midnight-Compact%200.14.0-6366F1)
 ![License](https://img.shields.io/badge/License-MIT-emerald)
 
-> Production-grade dApp built on the **Midnight Blockchain** for the **First Quarter — Level 3 Hackathon**.  
-> Prove membership in a private allowlist using client-side zero-knowledge proofs without revealing identity, wallet address, or secret credentials.
+> Prove membership in a private allowlist using zero-knowledge proofs on the Midnight blockchain without revealing your identity, wallet address, or secret credentials.
 
 ---
 
-## 💡 Problem Statement & Overview
-Traditional EVM allowlists store raw addresses on a public ledger. Every time a user claims a token, accesses a gated community, or exercises a membership right, their public address is permanently recorded on-chain, creating a privacy leak that ties their real-world identity to their complete transaction history and wallet holdings.
-
-**Private Allowlist Access** solves this via **Selective Disclosure**:
-- An admin maintains hashed member commitments (`SHA256(secretKey || salt)`) structured as a Merkle tree root on the Midnight ledger.
-- A user proves membership by executing a **Compact ZK circuit** locally in their browser.
-- The circuit verifies inclusion in the Merkle tree root and sets public state `accessGranted = true`.
-- The public ledger records ONLY that a valid member proved access — **zero bytes of member identity are ever stored or exposed.**
+## Overview
+**Midnight Private Allowlist Access** is a production-grade selective disclosure dApp built on the **Midnight blockchain** for the **"New Moon to Full" Level 3 (First Quarter) Hackathon** submission. It allows users to demonstrate membership in an exclusive whitelist (such as gated community access, private token sales, or accredited investor verification) by executing a client-side zero-knowledge proof. By verifying inclusion against a private Merkle commitment root on-chain, the dApp outputs a verifiable public access signal while keeping the prover's identity, address, and secret credentials 100% private.
 
 ---
 
-## 🔒 Privacy Model (Explicit Specifications)
-
-An observer of the public ledger **CAN** see:
-- `allowlistRoot` (Bytes<32>): Merkle root hash representing the current set of authorized commitments.
-- `accessGranted` (Boolean): Public event status flag toggled to `true` when a valid ZK proof is verified.
-- `registeredCount` (Uint<32>): Total number of registered commitments.
-- `lastEventNonce` (Uint<64>): Monotonically increasing sequence number for event tracking.
-- `adminIdentity` (Bytes<32>): Admin authorization identity hash.
-
-An observer of the public ledger **CANNOT** see:
-- ❌ Which specific member or address proved access.
-- ❌ The caller's wallet address or public key.
-- ❌ The caller's raw secret key or blinding salt.
-- ❌ The Merkle sibling path or leaf index position of the member.
-- ❌ Timing correlation linking a transaction back to a specific identity.
+## Problem Statement
+Traditional allowlists and token-gating implementations on public blockchains (such as Ethereum or Solana) force users to interact using their raw public wallet address (`0x...`). When a user claims an NFT mint, joins a private DAO, or participates in a whitelist token sale, their public wallet address is permanently recorded on the public ledger. This creates a severe privacy vulnerability that exposes the user's complete financial holdings, transaction history, and real-world identity to anyone observing the blockchain. Consequently, members become targets for spear-phishing, wallet tracking, MEV exploitation, and physical security threats.
 
 ---
 
-## 🏗️ Architecture & Component Flow
+## Solution
+This dApp solves the public address exposure problem by leveraging Midnight's **Compact zero-knowledge smart contract paradigm**. An administrator registers hashed member commitments (`SHA256(secretKey || salt)`) into a private state Merkle tree root on the Midnight ledger. When a member requests access, they construct a zero-knowledge membership proof locally within their browser RAM using private witnesses. The smart contract validates the Merkle inclusion proof and emits a public boolean flag (`accessGranted = true`), proving valid membership to the network without leaking a single byte of member identity, secret data, or wallet address.
+
+---
+
+## Architecture
 
 ```
-                                  CLIENT / BROWSER
- ┌────────────────────────────────────────────────────────────────────────────────┐
- │  Private Witness (RAM Only)                                                     │
- │  - secretKey: Bytes<32>                                                        │
- │  - blindingSalt: Bytes<32>                                                     │
- │  - merklePath: Vector<8, Bytes<32>>                                            │
- └──────────────────────┬─────────────────────────────────────────────────────────┘
-                        │
-                        ▼ (Local Execution)
- ┌────────────────────────────────────────────────────────────────────────────────┐
- │  Compact ZK Proof Circuit (`contract/allowlist.compact`)                       │
- │  1. computeLeafCommitment(secretKey, salt) -> leaf                            │
- │  2. computeMerkleRoot(leaf, merklePath) -> calculatedRoot                     │
- │  3. assert(calculatedRoot == ledger.allowlistRoot)                            │
- └──────────────────────┬─────────────────────────────────────────────────────────┘
-                        │
-                        ▼ (ZK Proof Output)
- ┌────────────────────────────────────────────────────────────────────────────────┐
- │  MIDNIGHT PUBLIC LEDGER                                                         │
- │  - accessGranted: true  (Public verifiable flag, 0 Identity Leakage)            │
- └──────────────────────┬─────────────────────────────────────────────────────────┘
-                        │
-                        ▼ (REST Polling / WebSockets)
- ┌────────────────────────────────────────────────────────────────────────────────┐
- │  BACKEND EVENT INDEXER SERVICE (`/indexer`)                                    │
- │  - GET /api/access-status -> { accessGranted: true, privacy: "0 Bytes Leaked" } │
- └────────────────────────────────────────────────────────────────────────────────┘
+ ┌─────────────────────────────────────────────────────────────────────────────────┐
+ │                                  USER WALLET                                    │
+ │                    Midnight Lace Wallet / Stellar Freighter                     │
+ └────────────────────────────────────────┬────────────────────────────────────────┘
+                                          │
+                                          ▼
+ ┌─────────────────────────────────────────────────────────────────────────────────┐
+ │                                FRONTEND DAPP                                    │
+ │                     React 18 + TypeScript + Vite + Tailwind                     │
+ │                             (frontend/src/App.tsx)                              │
+ └────────────────────────────────────────┬────────────────────────────────────────┘
+                                          │ (Private Witnesses)
+                                          ▼
+ ┌─────────────────────────────────────────────────────────────────────────────────┐
+ │                            PROOF GENERATION ENGINE                              │
+ │                 Local Compact ZK Circuit & Merkle Tree Engine                   │
+ │                    (contract/allowlist.compact & src/merkle.ts)                 │
+ └────────────────────────────────────────┬────────────────────────────────────────┘
+                                          │ (Zero-Knowledge Proof)
+                                          ▼
+ ┌─────────────────────────────────────────────────────────────────────────────────┐
+ │                            MIDNIGHT SMART CONTRACT                              │
+ │                     Private State Root & Public Ledger State                    │
+ │                     (contract/src/index.ts & allowlist.compact)                 │
+ └────────────────────────────────────────┬────────────────────────────────────────┘
+                                          │ (Public State Update)
+                                          ▼
+ ┌─────────────────────────────────────────────────────────────────────────────────┐
+ │                             BACKEND EVENT INDEXER                               │
+ │                      Node.js / Express State Polling Service                    │
+ │                             (indexer/src/index.ts)                              │
+ └─────────────────────────────────────────────────────────────────────────────────┘
 ```
+
+### Component Breakdown
+- **Compact Smart Contract & Circuit ([contract/allowlist.compact](file:///c:/Users/raita/OneDrive/Documents/Desktop/FirstQuarter/contract/allowlist.compact))**: The core Midnight Compact contract defining public ledger state (`allowlistRoot`, `accessGranted`, `registeredCount`, `lastEventNonce`), private witnesses (`witnessSecretKey`, `witnessBlindingSalt`, `witnessMerklePath`), and the ZK constraint verification circuit (`proveMembership`).
+- **Contract Execution Runtime ([contract/src/index.ts](file:///c:/Users/raita/OneDrive/Documents/Desktop/FirstQuarter/contract/src/index.ts) & [contract/src/merkle.ts](file:///c:/Users/raita/OneDrive/Documents/Desktop/FirstQuarter/contract/src/merkle.ts))**: Pure TypeScript Merkle tree generator and cryptographic commitment engine powering local ZK proof generation and contract state transitions.
+- **Frontend dApp ([frontend/src/App.tsx](file:///c:/Users/raita/OneDrive/Documents/Desktop/FirstQuarter/frontend/src/App.tsx))**: Interactive dashboard built with React 18, Vite, and Tailwind CSS featuring the Admin Registration Panel, ZK Proof Prover Console, Public Ledger Observer, and Privacy Model Inspector Modal.
+- **Multi-Wallet Integration SDK ([frontend/src/midnight-sdk/index.ts](file:///c:/Users/raita/OneDrive/Documents/Desktop/FirstQuarter/frontend/src/midnight-sdk/index.ts))**: Wallet service connector integrating Midnight Lace Wallet, Stellar Freighter Wallet, and offline ZK Simulator Mode.
+- **Backend Event Indexer ([indexer/src/index.ts](file:///c:/Users/raita/OneDrive/Documents/Desktop/FirstQuarter/indexer/src/index.ts))**: Express REST service monitoring on-chain contract events and serving `/api/access-status`, `/api/events`, and `/api/health`.
 
 ---
 
-## 🚀 Repository Structure
+## 🔒 Privacy Model
 
-```
-├── contract/
-│   ├── allowlist.compact     # Midnight Compact Smart Contract & ZK Proof Circuit
-│   └── src/                  # Merkle tree & witness execution runtime
-├── frontend/
-│   ├── src/                  # React 18 + Vite + Tailwind CSS dApp UI
-│   └── src/midnight-sdk/     # Midnight JS & Lace Wallet connector
-├── indexer/                  # Node.js/Express event indexing backend
-├── tests/
-│   ├── allowlist.test.ts     # ZK circuit & privacy model unit tests
-│   ├── indexer.test.ts       # Backend indexer API integration tests
-│   └── frontend.test.ts      # Client proof generator tests
-├── .github/workflows/
-│   └── ci.yml                # GitHub Actions automated test & build pipeline
-├── PROPOSAL.md               # Product proposal document
-└── DEMO_SCRIPT.md            # 1-minute video demo transcript & outline
-```
+### What an Observer CAN See:
+- **`allowlistRoot` (Bytes<32>)**: The public Merkle root hash of authorized identity commitments.
+- **`accessGranted` (Boolean)**: The verifiable output flag set to `true` when any valid ZK proof is verified.
+- **`registeredCount` (Uint<32>)**: The total count of registered commitments added by the admin.
+- **`lastEventNonce` (Uint<64>)**: The contract event sequence nonce used for indexer synchronization.
+- **`adminIdentity` (Bytes<32>)**: The admin public key hash authorized to manage commitments.
+
+### What an Observer CANNOT See:
+- ❌ **Which specific member proved access**: Zero indication of leaf index or member identity.
+- ❌ **Member Wallet Address or Public Key**: No address is passed to or recorded on the ledger.
+- ❌ **User Secret Key or Blinding Salt**: Remains 100% inside client-side browser RAM.
+- ❌ **Merkle Sibling Path**: Sibling hashes used to verify inclusion are kept strictly inside the ZK proof circuit.
+- ❌ **Linkability / Correlation**: An observer cannot determine if two separate proof transactions were generated by the same member or different members.
+
+> **Privacy Model Contrast:** Unlike a traditional EVM allowlist where every access claim publicly broadcasts the caller's wallet address (`0x123...`) to the blockchain, Midnight's Compact engine proves membership via zero-knowledge mathematics, guaranteeing that zero bytes of user identity or address metadata ever reach public state.
 
 ---
 
-## 🛠️ Quick Start & Running Locally
+## Tech Stack
+- **Smart Contract Language**: Midnight Compact (`>= 0.14.0`)
+- **Midnight SDK Packages**: `@midnight-ntwrk/compact-runtime`, `@midnight-ntwrk/midnight-js-contracts`, `@midnight-ntwrk/midnight-js-fetch-zk-config`, `@midnight-ntwrk/midnight-js-types`
+- **Wallet Provider Interfaces**: Midnight Lace Wallet Extension, Stellar Freighter Wallet (`@stellar/freighter-api`)
+- **Frontend Framework**: React 18, TypeScript, Vite 5, Tailwind CSS 3, Lucide React, Framer Motion
+- **Backend & Indexer**: Node.js, Express 4, TypeScript, `ts-node`
+- **Testing Framework**: Vitest 1.6
+- **CI/CD Pipeline**: GitHub Actions (`.github/workflows/ci.yml`)
+
+---
+
+## Getting Started
 
 ### Prerequisites
 - Node.js >= 18.0.0
@@ -101,43 +107,125 @@ An observer of the public ledger **CANNOT** see:
 
 ### Installation
 ```bash
-# Clone repository
+# 1. Clone the repository
 git clone https://github.com/shashank/first-quarter-level3-private-allowlist.git
 cd first-quarter-level3-private-allowlist
 
-# Install all monorepo dependencies
+# 2. Install monorepo workspace dependencies
 npm install
 ```
 
-### Running the dApp & Services
+### Environment Setup
+No external `.env` file is required for initial local development. Defaults are configured in `frontend/src/midnight-sdk/index.ts`:
+```env
+CONTRACT_ADDRESS=0xmidnight1q84z9x2a4v7c9w0e2f4g6h8j0k2l4m6n8p0r2s4t6v8w0x2
+PROOF_SERVER_URL=https://proof-server.testnet.midnight.network
+INDEXER_PORT=4000
+FRONTEND_PORT=3000
+```
+
+### Build & Run Dev Servers
 ```bash
-# Compile contracts and build all packages
+# 1. Compile Compact smart contracts & build all workspace packages
 npm run build
 
-# Start Frontend Dev Server & Backend Indexer concurrently
+# 2. Start Frontend Dev Server (Vite) and Event Indexer (Express) concurrently
 npm run dev
 ```
-Open [http://localhost:3000](http://localhost:3000) in your browser.
+Open [http://localhost:3000](http://localhost:3000) to view the dApp.
+
+### Deploying Contract to Midnight Testnet
+```bash
+# Compile Compact contract and run deployment routine
+npm run compile:compact --workspace=contract
+```
 
 ---
 
-## 🧪 Testing Instructions
+## Running Tests
 
-Run the complete Vitest unit & integration test suite (6 passing tests):
+Execute the full Vitest unit and integration test suite across the monorepo:
 
 ```bash
 npm test
 ```
 
-### Test Coverage Highlights:
-1. **Test 1**: Valid member proof generation and Compact execution succeeds (`accessGranted = true`).
-2. **Test 2**: Non-member secret proof verification fails clean without access granted.
-3. **Test 3**: **Zero Identity Leakage Assertion** — Validates that public state JSON contains zero raw secrets, salts, or identity metadata.
-4. **Test 4**: Admin commitment registration updates allowlist Merkle root correctly.
-5. **Test 5**: Event Indexer backend service state polling and API response validation.
-6. **Test 6**: Frontend ZK proof helper proof calculation parity.
+### Implemented Test Suite Details:
+- **[tests/allowlist.test.ts](file:///c:/Users/raita/OneDrive/Documents/Desktop/FirstQuarter/tests/allowlist.test.ts)**:
+  - `Test 1: Valid member proof generation and contract execution succeeds`: Verifies secret key + salt ZK proof outputs `accessGranted = true`.
+  - `Test 2: Non-member proof verification fails clean`: Asserts unlisted secret keys fail ZK proof constraints.
+  - `Test 3: Zero identity leakage assertion`: Asserts `JSON.stringify(publicState)` contains zero raw secrets, salts, member addresses, or leaf indices.
+  - `Test 4: Admin commitment registration`: Verifies Merkle root hash updates correctly when new commitments are added.
+- **[tests/indexer.test.ts](file:///c:/Users/raita/OneDrive/Documents/Desktop/FirstQuarter/tests/indexer.test.ts)**:
+  - `Test 5: Indexer state polling & API response validation`: Tests event stream serialization and zero identity field exposure.
+- **[tests/frontend.test.ts](file:///c:/Users/raita/OneDrive/Documents/Desktop/FirstQuarter/tests/frontend.test.ts)**:
+  - `Test 6: Frontend ZK proof calculation`: Validates SHA256 commitment calculation parity between browser and contract runtime.
 
 ---
 
-## 📄 License
-MIT License. Created for the Midnight Blockchain Hackathon.
+## CI/CD
+Automated CI/CD is configured via GitHub Actions in [.github/workflows/ci.yml](file:///c:/Users/raita/OneDrive/Documents/Desktop/FirstQuarter/.github/workflows/ci.yml). 
+
+On every push or pull request to `main` / `master`, the workflow automatically:
+1. Sets up Node.js 20 environment with npm caching.
+2. Installs workspace dependencies (`npm ci`).
+3. Compiles Compact contracts and TypeScript packages (`npm run build`).
+4. Runs the full Vitest unit test suite (`npm test`).
+5. Asserts zero identity leakage specifications across all test cases.
+
+The workflow status badge at the top of this README reflects the current build status automatically.
+
+---
+
+## Live Demo
+🔗 Live demo: [ADD LINK AFTER DEPLOYMENT]
+
+---
+
+## Demo Video
+🎥 Demo video (1 min): [ADD LINK AFTER RECORDING]
+
+---
+
+## Project Structure
+
+```
+first-quarter-level3-private-allowlist/
+├── .github/workflows/
+│   └── ci.yml               # GitHub Actions CI/CD compile and test pipeline
+├── contract/                # Midnight Compact contract & TS execution runtime
+│   ├── allowlist.compact    # Compact smart contract & ZK membership circuit
+│   ├── tsconfig.json        # Contract TypeScript configuration
+│   └── src/                 # Merkle tree generator & state machine runtime
+│       ├── index.ts         # Contract class, witness handlers, state transitions
+│       └── merkle.ts        # Pure JS Merkle tree & SHA256 hashing engine
+├── frontend/                # React 18 + Vite + Tailwind CSS web application
+│   ├── index.html           # HTML5 document root
+│   ├── vite.config.ts       # Vite bundler configuration
+│   ├── tailwind.config.js   # Midnight dark glassmorphism design system
+│   └── src/                 # Application source code
+│       ├── App.tsx          # Main dApp dashboard & state coordinator
+│       ├── contract-bindings.ts # Contract package re-export bindings
+│       ├── midnight-sdk/    # Multi-wallet service (Lace & Freighter)
+│       └── components/      # UI components (AdminPanel, ProofConsole, etc.)
+├── indexer/                 # Node.js / Express event indexing backend
+│   └── src/index.ts         # Event stream polling engine & REST API endpoints
+├── tests/                   # Monorepo Vitest unit & integration test suite
+│   ├── allowlist.test.ts    # ZK circuit & privacy model unit tests
+│   ├── indexer.test.ts      # Backend indexer API integration tests
+│   └── frontend.test.ts     # Client proof generator unit tests
+├── DEMO_SCRIPT.md           # 1-minute video demo transcript & outline
+├── PROPOSAL.md              # Product proposal document
+├── package.json             # Root monorepo workspace configuration
+└── README.md                # Submission documentation
+```
+
+---
+
+## Idea Submission
+This idea was submitted and approved under the **"Private Allowlist Access"** category for the Midnight Blockchain Hackathon (First Quarter — Level 3).
+
+---
+
+## License
+MIT License. Created for the Midnight Blockchain Hackathon submission.
