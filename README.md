@@ -1,5 +1,5 @@
 # Midnight Private Allowlist Access
-[![CI Pipeline](https://github.com/shashank/first-quarter-level3-private-allowlist/actions/workflows/ci.yml/badge.svg)](https://github.com/shashank/first-quarter-level3-private-allowlist/actions/workflows/ci.yml)
+[![CI Pipeline](https://github.com/Shashank56788/FirstQuarter/actions/workflows/ci.yml/badge.svg)](https://github.com/Shashank56788/FirstQuarter/actions/workflows/ci.yml)
 ![Midnight Compact](https://img.shields.io/badge/Midnight-Compact%200.14.0-6366F1)
 ![License](https://img.shields.io/badge/License-MIT-emerald)
 
@@ -108,8 +108,8 @@ This dApp solves the public address exposure problem by leveraging Midnight's **
 ### Installation
 ```bash
 # 1. Clone the repository
-git clone https://github.com/shashank/first-quarter-level3-private-allowlist.git
-cd first-quarter-level3-private-allowlist
+git clone https://github.com/Shashank56788/FirstQuarter.git
+cd FirstQuarter
 
 # 2. Install monorepo workspace dependencies
 npm install
