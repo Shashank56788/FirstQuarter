@@ -79,7 +79,7 @@ export const App: React.FC = () => {
   const handleProveMembership = async (secret: string, salt: string): Promise<TransactionResult> => {
     const leaf = computeCommitment(secret, salt);
     // Find index or default to 0
-    let index = contract.merkleTree.leaves.findIndex(l => l === leaf);
+    let index = contract.merkleTree.leaves.findIndex((l: string) => l === leaf);
     if (index === -1) index = 0; // Will fail ZK proof if not in tree
 
     const proof = contract.merkleTree.getProof(index);

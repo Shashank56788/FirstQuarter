@@ -22,15 +22,10 @@ export interface TransactionResult {
   accessGranted: boolean;
   ledgerState: LedgerState;
   proofVerified: boolean;
-  identityLeaked: false; // Explicit privacy guarantee guarantee
+  identityLeaked: false;
   error?: string;
 }
 
-/**
- * Midnight Allowlist Smart Contract Runtime Interface
- * Simulates Midnight Compact ZK circuit execution, private witness resolution,
- * and ledger state transitions.
- */
 export class AllowlistContract {
   public ledger: LedgerState;
   public merkleTree: MerkleTree;
@@ -48,9 +43,6 @@ export class AllowlistContract {
     };
   }
 
-  /**
-   * Admin Function: Registers a new hashed member commitment to the contract
-   */
   public addCommitment(commitment: string): { index: number; newRoot: string } {
     const index = this.merkleTree.addCommitment(commitment);
     this.registeredCommitments.add(commitment);
@@ -62,26 +54,15 @@ export class AllowlistContract {
     return { index, newRoot: this.ledger.allowlistRoot };
   }
 
-  /**
-   * Admin Utility: Registers a member given their raw secret and salt
-   */
   public registerMemberSecret(secretKey: string, salt: string): { commitment: string; index: number } {
     const commitment = computeCommitment(secretKey, salt);
     const { index } = this.addCommitment(commitment);
     return { commitment, index };
   }
 
-  /**
-   * User ZK Proof Membership Execution:
-   * Takes user private witnesses, verifies ZK inclusion proof locally in client context,
-   * updates ledger state accessGranted = true without modifying or logging any user identity.
-   */
   public proveMembership(witnesses: PrivateWitnesses): TransactionResult {
     try {
-      // 1. Reconstruct leaf commitment inside ZK context
       const leaf = computeCommitment(witnesses.secretKey, witnesses.blindingSalt);
-
-      // 2. Reconstruct Merkle proof structure
       const proof: MerkleProof = {
         leaf,
         root: this.ledger.allowlistRoot,
@@ -90,7 +71,6 @@ export class AllowlistContract {
         index: -1
       };
 
-      // 3. Perform ZK Circuit Constraint Verification
       const isValid = MerkleTree.verifyProof(proof);
 
       if (!isValid) {
@@ -104,7 +84,6 @@ export class AllowlistContract {
         };
       }
 
-      // 4. Update Public Ledger State
       this.ledger.accessGranted = true;
       this.ledger.lastEventNonce += 1;
 
@@ -127,17 +106,11 @@ export class AllowlistContract {
     }
   }
 
-  /**
-   * Reset accessGranted status
-   */
   public resetAccessStatus(): LedgerState {
     this.ledger.accessGranted = false;
     return { ...this.ledger };
   }
 
-  /**
-   * Read public state ledger (Privacy inspection helper)
-   */
   public getPublicLedgerState(): LedgerState {
     return { ...this.ledger };
   }
