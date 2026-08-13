@@ -186,7 +186,17 @@ The workflow status badge at the top of this README reflects the current build s
 🎥 Demo video (1 min): [ADD LINK AFTER RECORDING]
 
 ---
+## 📸 Screenshots
 
+### 1. Test Suite Output (6 Passing Tests)
+![Test Output Output](image-2.png)
+
+### 2. CI/CD Passing Pipeline
+![CI/CD Pipeline Run](image.png)
+
+### 3. Frontend / dApp UI
+![Frontend dApp Dashboard UI](image-1.png)
+---
 ## Project Structure
 
 ```
