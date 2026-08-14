@@ -178,7 +178,7 @@ The workflow status badge at the top of this README reflects the current build s
 ---
 
 ## Live Demo
-🔗 Live demo: [ADD LINK AFTER DEPLOYMENT]
+🔗 **Live Demo**: [https://first-quarter-frontend-95im.vercel.app/](https://first-quarter-frontend-95im.vercel.app/)
 
 ---
 
