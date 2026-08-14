@@ -183,7 +183,7 @@ The workflow status badge at the top of this README reflects the current build s
 ---
 
 ## Demo Video
-🎥 Demo video (1 min): [ADD LINK AFTER RECORDING]
+🎥 **Demo Video (1 min)**: [https://photos.app.goo.gl/91Ng5SSueUNxDF7D6](https://photos.app.goo.gl/91Ng5SSueUNxDF7D6)
 
 ---
 ## 📸 Screenshots
