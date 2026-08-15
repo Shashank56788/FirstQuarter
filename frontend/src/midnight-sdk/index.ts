@@ -22,7 +22,7 @@ export interface MidnightContractConfig {
 }
 
 export const DEFAULT_MIDNIGHT_CONFIG: MidnightContractConfig = {
-  contractAddress: '0xmidnight1q84z9x2a4v7c9w0e2f4g6h8j0k2l4m6n8p0r2s4t6v8w0x2',
+  contractAddress: '010000a6e7c10b93e42b2605b38ed7f02d4f21db59d8c47b59e521a04fd90432',
   proofServerUrl: 'https://proof-server.testnet.midnight.network',
   indexerUrl: 'http://localhost:4000/api',
   networkId: 'midnight-testnet-1'

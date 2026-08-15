@@ -22,6 +22,14 @@ This dApp solves the public address exposure problem by leveraging Midnight's **
 
 ---
 
+## 🌐 Contract Address & Deployment Info
+The smart contract has been deployed to the Midnight Preprod Network.
+
+- **Network Label**: Midnight Preprod Testnet
+- **Contract Address**: `010000a6e7c10b93e42b2605b38ed7f02d4f21db59d8c47b59e521a04fd90432`
+
+---
+
 ## Architecture
 
 ```
@@ -118,7 +126,7 @@ npm install
 ### Environment Setup
 No external `.env` file is required for initial local development. Defaults are configured in `frontend/src/midnight-sdk/index.ts`:
 ```env
-CONTRACT_ADDRESS=0xmidnight1q84z9x2a4v7c9w0e2f4g6h8j0k2l4m6n8p0r2s4t6v8w0x2
+CONTRACT_ADDRESS=010000a6e7c10b93e42b2605b38ed7f02d4f21db59d8c47b59e521a04fd90432
 PROOF_SERVER_URL=https://proof-server.testnet.midnight.network
 INDEXER_PORT=4000
 FRONTEND_PORT=3000
@@ -151,14 +159,14 @@ npm test
 ```
 
 ### Implemented Test Suite Details:
-- **[tests/allowlist.test.ts](file:///c:/Users/raita/OneDrive/Documents/Desktop/FirstQuarter/tests/allowlist.test.ts)**:
+- **[contract/src/allowlist.test.ts](file:///c:/Users/raita/OneDrive/Documents/Desktop/FirstQuarter/contract/src/allowlist.test.ts)** (mirrored at `tests/allowlist.test.ts`):
   - `Test 1: Valid member proof generation and contract execution succeeds`: Verifies secret key + salt ZK proof outputs `accessGranted = true`.
   - `Test 2: Non-member proof verification fails clean`: Asserts unlisted secret keys fail ZK proof constraints.
   - `Test 3: Zero identity leakage assertion`: Asserts `JSON.stringify(publicState)` contains zero raw secrets, salts, member addresses, or leaf indices.
   - `Test 4: Admin commitment registration`: Verifies Merkle root hash updates correctly when new commitments are added.
-- **[tests/indexer.test.ts](file:///c:/Users/raita/OneDrive/Documents/Desktop/FirstQuarter/tests/indexer.test.ts)**:
+- **[indexer/src/indexer.test.ts](file:///c:/Users/raita/OneDrive/Documents/Desktop/FirstQuarter/indexer/src/indexer.test.ts)** (mirrored at `tests/indexer.test.ts`):
   - `Test 5: Indexer state polling & API response validation`: Tests event stream serialization and zero identity field exposure.
-- **[tests/frontend.test.ts](file:///c:/Users/raita/OneDrive/Documents/Desktop/FirstQuarter/tests/frontend.test.ts)**:
+- **[frontend/src/frontend.test.ts](file:///c:/Users/raita/OneDrive/Documents/Desktop/FirstQuarter/frontend/src/frontend.test.ts)** (mirrored at `tests/frontend.test.ts`):
   - `Test 6: Frontend ZK proof calculation`: Validates SHA256 commitment calculation parity between browser and contract runtime.
 
 ---

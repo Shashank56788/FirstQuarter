@@ -30,4 +30,4 @@ jobs:
         run: npm test
 
       - name: Verify Privacy Model & Zero Identity Leakage Assertions
-        run: npx vitest run tests/allowlist.test.ts
+        run: npx vitest run contract/src/allowlist.test.ts
