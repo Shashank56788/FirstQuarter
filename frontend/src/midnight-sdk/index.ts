@@ -6,11 +6,11 @@
 export interface WalletState {
   isConnected: boolean;
   address: string | null;
-  network: 'Midnight Testnet' | 'Stellar Mainnet/Testnet' | 'Disconnected' | 'Demo Simulator Mode';
+  network: 'Midnight Testnet' | 'Stellar Mainnet/Testnet' | 'Disconnected';
   balance: string;
   isLaceInstalled: boolean;
   isFreighterInstalled: boolean;
-  walletType?: 'Lace' | 'Freighter' | 'Simulator';
+  walletType?: 'Lace' | 'Freighter';
   error?: string;
 }
 
@@ -32,7 +32,7 @@ export class MidnightWalletService {
   private static instance: MidnightWalletService;
   private connected: boolean = false;
   private address: string | null = null;
-  private currentWalletType: 'Lace' | 'Freighter' | 'Simulator' | undefined;
+  private currentWalletType: 'Lace' | 'Freighter' | undefined;
 
   public static getInstance(): MidnightWalletService {
     if (!MidnightWalletService.instance) {
@@ -157,25 +157,6 @@ export class MidnightWalletService {
     }
   }
 
-  /**
-   * Connect to ZK Simulator Mode
-   */
-  public async connectDemoWallet(): Promise<WalletState> {
-    await new Promise(res => setTimeout(res, 300));
-    this.connected = true;
-    this.address = '0xmn_demo_simulated_user_77777777777777777777777';
-    this.currentWalletType = 'Simulator';
-
-    return {
-      isConnected: true,
-      address: this.address,
-      network: 'Demo Simulator Mode',
-      balance: '500.00 SIM-NIGHT',
-      isLaceInstalled: await this.checkLaceAvailability(),
-      isFreighterInstalled: await this.checkFreighterAvailability(),
-      walletType: 'Simulator'
-    };
-  }
 
   public async disconnectWallet(): Promise<WalletState> {
     this.connected = false;
